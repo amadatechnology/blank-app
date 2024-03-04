@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('currentUser')));
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [authError, setAuthError] = useState(null);
+  const serverBaseUrl = process.env.REACT_APP_SERVER_BASE_URL || 'http://localhost:3001';
 
   const setAuthToken = (token) => {
     localStorage.setItem('token', token);
@@ -40,8 +41,7 @@ export const AuthProvider = ({ children }) => {
     if (storedToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
       try {
-        // Fetch current user data
-        const response = await axios.get('http://localhost:3001/current-user');
+        const response = await axios.get(`${serverBaseUrl}/current-user`);
         const userData = response.data;
         updateCurrentUser(userData);
       } catch (error) {
@@ -56,10 +56,9 @@ export const AuthProvider = ({ children }) => {
 
   const updateCurrentUser = useCallback(async (userData, callback) => {
     localStorage.setItem('currentUser', JSON.stringify(userData));
-    localStorage.setItem('userId', userData.id);  // Save userId to localStorage
+    localStorage.setItem('userId', userData.id);
     setCurrentUser(userData);
 
-    // Execute the callback if provided
     if (callback && typeof callback === 'function') {
       callback();
     }
@@ -67,7 +66,7 @@ export const AuthProvider = ({ children }) => {
 
   const refreshToken = useCallback(async () => {
     try {
-      const response = await axios.post('http://localhost:3001/refresh-token', {
+      const response = await axios.post(`${serverBaseUrl}/refresh-token`, {
         refreshToken: localStorage.getItem('refreshToken'),
       });
 
@@ -94,16 +93,13 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback(async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:3001/login', { email, password });
+      const response = await axios.post(`${serverBaseUrl}/login`, { email, password });
       const { accessToken, refreshToken, tokenExpires, user } = response.data;
 
       if (accessToken && user) {
         setAuthToken(accessToken);
-
-        // Save refreshToken to localStorage
         localStorage.setItem('refreshToken', refreshToken);
 
-        // Include user information in the response
         updateCurrentUser({
           id: user._id,
           email: user.email,
@@ -137,7 +133,6 @@ export const AuthProvider = ({ children }) => {
         console.error('Login failed with unexpected server response:', response.data);
       }
     } catch (error) {
-      // If the error is related to an expired token, try refreshing the token
       if (error.response && error.response.status === 403) {
         refreshToken();
       } else {
@@ -157,19 +152,17 @@ export const AuthProvider = ({ children }) => {
   
       const normalizedEmail = email.toLowerCase();
   
-      const response = await axios.post('http://localhost:3001/register', { email: normalizedEmail, password });
+      const response = await axios.post(`${serverBaseUrl}/register`, { email: normalizedEmail, password });
       const data = response.data;
   
       if (data.accessToken && data.user) {
         localStorage.setItem('email', normalizedEmail);
         setAuthToken(data.accessToken);
   
-        // Save refreshToken to localStorage during registration
         if (data.refreshToken) {
           localStorage.setItem('refreshToken', data.refreshToken);
         }
   
-        // Include user information in the response
         updateCurrentUser({
           id: data.user.id,
           email: normalizedEmail,
@@ -190,7 +183,6 @@ export const AuthProvider = ({ children }) => {
           // Include other necessary user data
         });
   
-        // Navigate based on registration status
         if (!data.user.emailVerified) {
           navigate('/verify-email');
         } else if (!data.user.profileComplete) {
