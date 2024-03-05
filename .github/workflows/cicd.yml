@@ -31,7 +31,4 @@ jobs:
       - name: Debug GitHub Actions Environment
         run: |
           echo "REACT_APP_SERVER_BASE_URL: ${{ secrets.REACT_APP_SERVER_BASE_URL }}"
-          cat .env
-          cat build/.env
-          cat build/.env.production
           echo "Server Base URL in AuthContext.js: ${{ secrets.REACT_APP_SERVER_BASE_URL }}"
