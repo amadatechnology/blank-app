@@ -95,11 +95,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post(`${serverBaseUrl}/login`, { email, password });
       const { accessToken, refreshToken, tokenExpires, user } = response.data;
-
+  
       if (accessToken && user) {
-        setAuthToken(accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-
         updateCurrentUser({
           id: user._id,
           email: user.email,
@@ -119,7 +116,10 @@ export const AuthProvider = ({ children }) => {
           location: user.location
           // Include other necessary user data
         });
-
+  
+        setAuthToken(accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+  
         if (user.emailVerified) {
           if (user.profileComplete) {
             navigate('/');
@@ -141,7 +141,8 @@ export const AuthProvider = ({ children }) => {
         navigate('/login');
       }
     }
-  }, [navigate, updateCurrentUser, refreshToken]);
+  }, [navigate, updateCurrentUser, refreshToken, setAuthToken]);
+  
 
   const register = useCallback(async (email, password, verifyPassword) => {
     try {
