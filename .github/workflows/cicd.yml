@@ -17,7 +17,7 @@ jobs:
         run: docker build -t amadatech/blank-app --build-arg REACT_APP_NODE_ENV='production' --build-arg REACT_APP_SERVER_BASE_URL='${{ secrets.REACT_APP_SERVER_BASE_URL }}'  .
       - name: Publish Image to docker hub
         run: docker push amadatech/blank-app:latest 
- 
+
   deploy:
     needs: build
     runs-on: self-hosted 
@@ -28,3 +28,10 @@ jobs:
         run: docker rm -f blank-app-container
       - name: Run Docker Container
         run: docker run -d -p 3000:80 --name blank-app-container amadatech/blank-app
+      - name: Debug GitHub Actions Environment
+        run: |
+          echo "REACT_APP_SERVER_BASE_URL: ${{ secrets.REACT_APP_SERVER_BASE_URL }}"
+          cat .env
+          cat build/.env
+          cat build/.env.production
+          echo "Server Base URL in AuthContext.js: ${{ secrets.REACT_APP_SERVER_BASE_URL }}"
